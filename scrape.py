@@ -1,6 +1,8 @@
 from telnetlib import EC
 import requests
+import time
 from selenium import webdriver
+from selenium.webdriver import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -22,10 +24,77 @@ def scrape_title():
     else:
         print("No matching span elements found with itemprop='name'.")
 
+def search_bar_interaction():
+    driver = webdriver.Chrome()
+
+    # Navigate to the website
+    driver.get("https://hungrynaki.com/")
+
+    # Wait for the search bar element to be present
+    wait = WebDriverWait(driver, 10)
+    search_bar = wait.until(EC.presence_of_element_located((By.CLASS_NAME, "search-field")))
+
+    # Find the search bar element and enter a search query
+    search_bar = driver.find_element(By.CLASS_NAME, "search-field")
+    search_bar.send_keys("gulshan 1")
+
+    # Submit the search query
+    submit_button = driver.find_element(By.CLASS_NAME, "find-food")
+    submit_button.click()
+
+    # Wait for the page to load after clicking the submit button
+    time.sleep(3)  # Adjust the sleep duration as needed
+
+    # Get the page source (HTML) after the click
+    page_source = driver.page_source
+    print(page_source)
+
+    driver.quit()
 
 
+def scrape_restaurant_names():
+    options = Options()
+    options.add_argument("--headless")  # Run Chrome in headless mode
+    driver = webdriver.Chrome()
+
+    # Navigate to the webpage
+    driver.get("https://hungrynaki.com/restaurants")
+
+    # Wait for the desired element to be visible
+    wait = WebDriverWait(driver, 30)  # Maximum wait time in seconds
+    element = wait.until(EC.visibility_of_element_located((By.CLASS_NAME, 'footer-component')))
+
+    # Get the page source after dynamic content has loaded
+    page_source = driver.page_source
+
+    # Parse the page source with Beautiful Soup
+    soup = BeautifulSoup(page_source, 'html.parser')
+
+    # Find the container for the menu categories
+    item_containers = soup.find_all('div', {'class': 'container'})
+    if item_containers:
+        for item_container in item_containers:
+
+            p_elements = item_container.find_all('p', {'class': 'outlet-name bold'})
 
 
+            # Extract the pizza details
+            restaurant_names = []
+
+
+            for p_element in p_elements:
+                restaurant_names.append(p_element.text.strip())
+
+            # Iterate over the span elements and extract the price text
+
+
+            print("Restaurant names:")
+            for name in zip(restaurant_names):
+                print("Restaurant name:", name)
+
+
+    else:
+        print("No matching menu-category-container found.")
 
 def scrape_menu():
     # Set up Selenium WebDriver
