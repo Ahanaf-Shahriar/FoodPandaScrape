@@ -12,9 +12,9 @@ def url_request():
         else:
             print("Website is not accessible. Status code:", response.status_code)
     except requests.exceptions.RequestException as e:
-        print("An error occurred:", e) 
+        print("An error occurred:", e)
 
-def chromium_driver(): 
+def chromium_driver():
     options = Options()
     options.add_argument("--headless")  # Run Chrome in headless mode
     driver = webdriver.Chrome()
@@ -22,4 +22,3 @@ def chromium_driver():
         pass
 
         return driver.get("https://hungrynaki.com/restaurant/diggger-mohakhali/menu")
-     
