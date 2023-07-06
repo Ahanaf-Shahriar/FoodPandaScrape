@@ -1,4 +1,4 @@
-from scrape import scrape_restaurant_page, scrape_restaurant_names
+from scrape import scrape_restaurant_page
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
