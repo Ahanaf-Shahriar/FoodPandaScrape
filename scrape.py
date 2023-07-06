@@ -1,18 +1,12 @@
 import csv
-import time
-import random
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
-from fake_useragent import UserAgent
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-from url import restaurant_url
 
 
 
@@ -67,47 +61,55 @@ def scrape_restaurant_names():
             driver.quit()
 
 
-def scrape_restaurant_page(restaurant_urls):
+def scrape_restaurant_page():
     # Set up Selenium WebDriver
     options = Options()
-    user_agent = UserAgent()
-    random_user_agent = user_agent.random
-    options.add_argument(f"user-agent={random_user_agent}")
-
-    options.add_argument('--headless')
+    #options.add_argument('--headless')
 
     driver = webdriver.Chrome(options=options)
 
     try:
-        for i in range(len(restaurant_urls)):
-            url = restaurant_urls[i]
-            print(url)
+        # Navigate to the webpage
+        driver.get("https://www.foodpanda.com.bd/restaurant/s0hh/gloria-jeans-coffee-gulshan-1")
 
-            full_url = "https://www.foodpanda.com.bd" + url
-            print(full_url)
-            driver.get(full_url)
-            page_source = driver.page_source
-            soup = BeautifulSoup(page_source, 'html.parser')
-        # Find the restaurant name element
-            title_element = driver.find_element(By.XPATH, "//button[@data-testid='vendor-main-info-section-button']")
-            restaurant_name = title_element.text.strip()
-            print("Restaurant Name:", restaurant_name)
+        # Get the page source after dynamic content has loaded
+        page_source = driver.page_source
 
-            # Find the containers for the menu categories
+        # Parse the page source with Beautiful Soup
+        soup = BeautifulSoup(page_source, 'html.parser')
+        title_element = driver.find_element(By.XPATH, "//button[@data-testid='vendor-main-info-section-button']")
 
-            menu_category_containers = soup.find_all('ul', class_='dish-list-grid')
-            num_containers = len(menu_category_containers)
-            print("Number of menu category containers found:", num_containers)
+        # Get the text of the button element
+        restaurant_name = title_element.text
+        print(restaurant_name)
+        # Find the container for the menu categories
+        menu_category_containers = soup.find_all('ul', {'class': 'dish-list-grid'})
+        num_containers = len(menu_category_containers)
+        print("Number of menu_category_containers found:", num_containers)
 
-            for container in menu_category_containers:
-                button_elements = container.find_all('button', {'data-testid': 'menu-product-button-overlay-id'})
-                for button_element in button_elements:
-                    # Get the value of the aria-label attribute
-                    aria_label = button_element.get('aria-label')
-                    # Remove the " - Add to cart" text
-                    aria_label = aria_label.replace(" - Add to cart", "")
-                    print(aria_label)
-                    time.sleep(random.uniform(12, 30))
+        for container in menu_category_containers:
+            button_elements = container.find_all('button', {'data-testid': 'menu-product-button-overlay-id'})
+            p_elements = container.find_all('p', {'data-testid': 'menu-product-description'})
+            div_elements = container.find_all('div', {'data-testid': 'menu-product-image'})
+
+            for button_element, p_element, div_element in zip(button_elements, p_elements, div_elements):
+                # Get the value of the aria-label attribute
+                aria_label = button_element.get('aria-label')
+                # Remove the " - Add to cart" text
+                aria_label = aria_label.replace(" - Add to cart", "")
+
+                # Get the description text
+                description = p_element.text.strip()
+
+                # Get the dish photo URL
+                style_attr = div_element.get('style')
+                photo_url = style_attr.split('url("')[1].split('")')[0]
+
+                print("Menu Item:", aria_label)
+                print("Description:", description)
+                print("Photo URL:", photo_url)
+                print()
+
 
     except NoSuchElementException as e:
         print("Element not found:", str(e))
@@ -116,5 +118,4 @@ def scrape_restaurant_page(restaurant_urls):
         if driver is not None:
             driver.quit()
             print("WebDriver closed successfully.")
-
 
